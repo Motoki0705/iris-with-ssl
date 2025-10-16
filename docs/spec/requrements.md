@@ -1,76 +1,83 @@
-# プロジェクト要件定義
+# プロジェクト要件（SSOT）
 
-## 1. 背景と目的
-- `resouce/No3演習課題.md` および `resouce/No4演習課題.md` に記載された演習課題をプログラムで再現・解決する。
-- Auto MPG データセットに対して自己教師あり学習（SSL; Masked Autoencoder）を導入し、`mpg` 予測精度の向上とデータ構造理解を図る。
-- planner, coder, tester, judge のマルチエージェント体制で開発し、各エージェントが参照できるドキュメントと成果物を整備する。
+DOC-ID: RQ-<project>-<nnn>  
+Version: 0.1.0  
+Owner: planner (@<name>)  
+Status: Draft  <!-- Draft | Active | Deprecated -->
+Last-Updated: YYYY-MM-DD
+<!-- 本書は要件の Single Source of Truth（SSOT）です。変更は必ずチケット経由で反映し、他文書は本書を参照します。 -->
 
-## 2. スコープ
-- **データセット**: `data/iris.csv`, `data/auto_mpg.csv`
-- **対象環境**: Python（`pyproject.toml` / `requirements.txt` に準拠）
-- **成果物**:
-  - 演習課題 No3/No4 の要件を満たすスクリプト・ノートブック・レポート
-  - SSL（Masked Autoencoder）モデルおよび転移学習ヘッド
-  - 実験ログ・評価指標・可視化結果と再現手順
+## 1. 目的と範囲（Purpose & Scope）
+- 目的: <なぜ実施するか（1–3 行）>
+- スコープ: <対象データ/機能/成果物>
+- 非スコープ: <含めないもの>
+- ステークホルダー: <orchestrator/reviewer, planner, coder, tester, judge>
+  <!-- 役割の詳細や手順は agents.md を参照（ここでは列挙のみ） -->
 
-## 3. 機能要件
-### 3.1 演習課題 No3（iris.csv）
-- **1-Sample_iris-DataPlot.ipynb**
-  - サンプルコードを実行し、Colab/Python 操作と iris データセットの構造を理解する。
-  - 描画される散布図のマーカーの色・形を5種類以上に改変して結果を保存。
-- **S2-Sample_iris-knnClassifier.ipynb**
-  - 全4特徴（sepal.length, sepal.width, petal.length, petal.width）で k=3 の KNN 分類器を実行し、分類結果・可視化・混同行列を取得。
-  - k を 1,2,5,10 など複数値に変更し、各モデルの結果（分類器構築、決定境界図、混同行列）を比較考察する。
-  - 追加課題: (sepal.length, sepal.width) と (petal.length, petal.width) の2特徴ペアそれぞれで上記比較を行い考察する。
-- **S3-Sample_iris-KmeansCluster.ipynb**
-  - 全4特徴を使い k=3 の K-means を実行しクラスタリング結果を可視化。
-  - k=4,5 でもクラスタリングを実施し図示・比較。
-  - 追加課題: 上記を 2 特徴ペア（sepal系、petal系）でも実行し、結果を考察する。
-- **提出物**
-  - コードまたはノートブック、生成図、混同行列、考察メモ。
-  - 実行手順と依存関係を README または同等のドキュメントに明記。
+## 2. データと実行環境（Data & Environment）
+- データセット:
+  - <path/to/data1.csv>（checksum: <sha256>）
+  - <path/to/data2.csv>（checksum: <sha256>）
+- Python/依存: Python <3.11> / <pandas, scikit-learn, ...>
+- 決定性: seed=<42>, split=<holdout/k-fold>, preprocessing=<scaler/imputer 等>
+- 設定の正典: `configs/<project>/*.{yml,json}`
+  <!-- 実行条件は原則 configs/ で一元管理し、コード直書きを避ける -->
 
-### 3.2 演習課題 No4（auto_mpg.csv）
-- **S4-Sample_auto_mpg-knnReg.ipynb**
-  - データを学習/評価に分割するユーティリティを実装。
-  - horsepower を X、mpg を Y とした k=3 の KNN 回帰モデルを学習し、評価データで MSE と R2 を算出。
-  - k や特徴（horsepower, weight, displacement から1〜3個選択）を変えた少なくとも3モデルを構築し、(b)〜(c)の手順を繰り返して比較。
-- **5-Sample_auto_mpg-lm.ipynb**
-  - Part-1: horsepower→mpg の線形回帰モデルと、X² を含む多項式回帰モデルを作成。両者を同じプロット上に描画し相関を考察。別の特徴1つでも同手順を実施。
-  - Part-2: 学習/評価分割を行い、horsepower/weight/displacement から選んだ特徴について、X² あり・なしの2パターンで線形回帰を学習し、評価データで MSE・R2 を算出。
-  - 追加課題: 複数特徴の組み合わせで3種類以上のモデルを構築し、X² の有無を含め MSE と R2 を比較。
-- **Discussion**
-  - 構築した全モデルのうち、MSE が最小の3モデルと R2 が最大の3モデルを抽出。
-  - 上記結果から最適なモデル・特徴量構成を比較し考察を文章化。
-- **提出物**
-  - KNN/線形回帰のコードまたはノートブック、評価指標一覧、比較グラフ、考察レポート。
+## 3. 機能要件（FR）
+<!-- 必要な数だけ以下のセクションを複製して使います。1 要件 = 1 ID。 -->
+### FR-<area>-<id>: <要件タイトル（簡潔に）>
+- 背景/根拠: <Why（1–2 行）>
+- 入力: <データ/設定/前提条件>
+- 処理: <主要ステップの要点（箇条書き）>
+- 出力: <生成物と形式（CSV/PNG/MD 等）>
+- 受入基準（Acceptance）:
+  - <指標と閾値／必須図表／保存先>  <!-- 例: accuracy ≥ 0.90、混同行列 PNG を保存 -->
+- 成果物（Artifacts）:
+  - `docs/results/<ticket-id>.*`（表・図・要約）
+  - `docs/trace/<ticket-id>.md`（実行条件：日時・コマンド・git hash）
+- リンク: Tickets[<ID,...>] / Modules[<src/...>] / Tests[<tests/...>]
 
-### 3.3 SSL 拡張（Masked Autoencoder + 転移学習）
-- Auto MPG 特徴量を一定割合でマスクし復元する Masked Autoencoder を実装。マスク率やマスク方法をパラメータ化する。
-- エンコーダ/デコーダ構造を定義し、復元誤差を最小化する学習ループとログ取得を整備。
-- 学習済みエンコーダをバックボーンとして `mpg` 予測ヘッドを追加し、教師ありの微調整を行う。
-- データ拡張としてノイズ付与やドロップアウトなどを導入し、少量データ環境での性能向上を検証。
-- 教師ありベースラインとの比較実験（指標: MSE, MAE, R2 など）と可視化（学習曲線、残差分布）を実施。
-- 実験条件・ハイパーパラメータ・結果を記録し、再現可能なスクリプトを提供。
+## 4. 非機能要件（NFR）
+- 再現性:
+  - 乱数・分割・前処理を固定し、設定値は `configs/` に保存
+  - 環境（Python/ライブラリ/OS）を明記
+- ログ/トレース:
+  - 指標・ハイパラ・図表は `docs/results/` に保存
+  - 実行条件（日時・コマンド・git hash）は `docs/trace/` に保存
+- コード品質（任意）: 型/formatter/linter の方針
+- パフォーマンス（任意）: 最大実行時間/メモリの目安
 
-## 4. 非機能要件
-- **再現性**: 依存パッケージを `pyproject.toml` / `requirements.txt` で管理し、セットアップと実行の手順を README に記載。
-- **コード品質**: 型ヒントや簡潔なコメントを用いて可読性を確保し、必要に応じてフォーマッタ・リンタを適用。
-- **ログ/追跡性**: 学習ログ・評価指標・生成物を `docs/results` 等に体系的に保存し、実験条件を `docs/trace` に記録。
-- **マルチエージェント連携**: planner/coder/tester/judge が参照するタスク一覧・進捗メモ・判断基準を文書化する。
+## 5. 指標と評価（Metrics & Evaluation）
+- 指標: <Accuracy | MSE | R2 | MAE ...>  <!-- 必要なら定義や式を記載 -->
+- 評価手順: <holdout/k-fold、反復回数、乱数固定、可視化必須物（学習曲線/残差図 等）>
+- レポーティング:
+  - 表: `docs/results/tables/<name>.csv`
+  - 図: `docs/results/figures/<name>.png`
 
-## 5. 検証要件
-- iris/auto_mpg のデータロード、前処理、モデル学習フローが自動テストまたはスモークテストで確認できる。
-- SSL + 転移学習の評価スクリプトで指標算出が自動化され、再実行で同等の結果が得られることを検証。
-- ノイズ付与有無やモデル差分について、定量評価に加えグラフ・表による比較を生成しレビュー可能にする。
+## 6. 検証計画（Verification & Validation）
+- スモーク: <短時間で I/O と主要指標を確認>  
+  例）`pytest -k "<keyword>"` / `python scripts/<run_xx>.py --smoke`
+- 回帰: <基準 CSV/JSON と一致、または許容差内>
+- レビュー: judge が `docs/results` と `docs/trace` を確認し合否判定
+  <!-- レビュー体制や承認手順の詳細は agents.md を参照 -->
 
-## 6. オープン課題・確認事項
-- Masked Autoencoder の詳細設計（層数、潜在次元、損失設計、最適化戦略）が未定。実験計画として具体化する。
-- ノイズ種別・強度などデータ拡張パラメータの最適化方針を決定する必要がある。
-- マルチエージェントでのタスク分担・成果物受け渡しルール（ファイル命名、レビュー手順）の明文化が必要。
-- 評価指標の集約・可視化形式（例: ダッシュボード、Markdown レポート）を決め、再利用可能なテンプレートを整える。
+## 7. 成果物と命名規約（Artifacts & Naming）
+- Results: `docs/results/<ticket-id>.*`（Markdown/CSV/PNG など）
+- Trace: `docs/trace/<ticket-id>.md`
+- （任意の細分）:
+  - `docs/results/tables/`（集計表）
+  - `docs/results/figures/`（図）
 
-## 7. 次のアクション（planner 視点）
-- No3/No4 の各項目をタスク分解（データ可視化、KNN、K-means、線形回帰、比較分析など）し、担当エージェントと期日を割り当てる。
-- SSL 拡張の設計検討タスク（モデル設計、学習実装、評価実験）を作成し、優先度と依存関係を整理する。
-- 結果報告テンプレートと進捗トラッキング方法を決め、対応するドキュメントを整備する。
+## 8. トレーサビリティ（Traceability Matrix）
+| RQ-ID | Ticket-ID | Module (src/) | Test (tests/) | Results (docs/results) | Trace (docs/trace) |
+|------|-----------|---------------|---------------|-------------------------|--------------------|
+| FR-… | <T-…>     | <path.py>     | <test_x.py>   | <tables/…/figures/…>    | <T-….md>          |
+
+## 9. 変更管理（Change Control）
+- 変更要求: <起票先（チケット）/ レビュア（judge）/ 承認フロー>
+- バージョン管理: 本書の更新履歴を冒頭に追記し、関連チケットへリンク
+- 同期: 承認後、`implementation-tasks.md` など派生文書を同期
+
+## 10. 未決事項（Open Issues）
+- [ ] <未決1>（担当: <name> / 期限: YYYY-MM-DD）
+- [ ] <未決2>（担当: <name> / 期限: YYYY-MM-DD）

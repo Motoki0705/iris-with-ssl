@@ -1,45 +1,152 @@
-# エージェント責任とワークフロー
+# Agents — マルチエージェント・ワークフロー（Draft, Minimal）
 
-## 1. 役割と責任
-- **orchestrator / reviewer（ユーザー）**
-  - planner の指示および `docs/tickets/overview.md` を参照しつつ、各エージェント（coder/tester/judge）へ具体的な作業依頼を出す。
-  - reviewer として judge と協調し、成果物が仕様を満たしているか確認し、必要に応じてフィードバックや追加チケットを発行する。
-  - チケットの状態更新が必要な場合は planner と連携し、overview に反映されるよう調整する。
+本書は **Who/How/Flow** を定義します。**What/Why/Done** は `requirements.md`（SSOT）を参照。
 
-- **planner**
-  - `docs/spec/requrements.md` を正典として全体進行を管理し、タスクをチケット化する。
-  - チケットには目的・完了条件・成果物形式（`docs/results` / `docs/trace`）を明記し、`docs/spec/implementation-tasks.md` と同期させる。
-  - チケットは `docs/tickets/<ticket-id>.md` に作成し、`docs/tickets/overview.md` に担当順序と履歴を追記する。
-  - 依存関係や優先度を調整し、各エージェントの進捗を把握して次のアクションを提示する。
-- **coder**
-  - planner のチケットを受け取り、仕様に沿って実装・修正・再構成を行う。
-  - 変更内容を `docs/trace` に記録し、成果（コード、図、指標など）の要約をチケット名と紐づけて `docs/results` に保存。
-  - チケットファイルへ成果概要・保存先を追記し、overview の状態欄を更新する。
-  - 実装中に仕様の不明点があれば planner にフィードバックし、仕様調整を依頼する。
-- **tester**
-  - planner のチケットに基づき、テスト戦略の立案・スクリプト作成・スモーク/回帰テストの実行を担当。
-  - テスト結果や再現手順を `docs/results` にまとめ、実行ログ・設定値を `docs/trace` に記録。
-  - チケットファイルと overview に進捗・結果・レビュー待ちステータスを記録する。
-  - 問題が見つかった場合はチケットに対して報告し、必要なら逆チケット（フォローアップ）を planner に提案する。
-- **judge**
-  - `docs/results` と `docs/trace` の成果を確認し、`docs/spec` の要件（要件、アーキテクチャ、タスク）を満たしているか評価。
-  - 判定結果と改善事項をチケットに記録しつつ、評価サマリを `docs/judges/<ticket-id>.md` にレポートとして残す。
-  - 完了と判断したチケットをクローズし、成果を次フェーズへ反映させる。差し戻しやフォローアップが必要な場合は planner に報告し、対応チケットを提案する。
+## 0. 層構造（Tiering）
 
-## 2. ワークフロー
-1. planner がチケットを発行し、対象エージェント（coder/tester）と成果物要件を指定する。
-2. coder/tester はチケットを受領して作業を実施。成果をまとめたファイルを `docs/results/<ticket-id>.*` などの命名で配置し、変更点やログを `docs/trace/<ticket-id>.md` 等に記録。
-3. 作業完了後、チケットに成果物パスと要約を報告し、レビュー待ち状態へ移行。
-4. judge が `docs/results` と `docs/trace` を確認し、`docs/spec` 群に照らして要求を満たすか評価。合否・改善点を `docs/judges/<ticket-id>.md` に記録し、問題があればチケットにコメント、必要な再作業を planner にフィードバック。
-5. judge の承認後、planner がチケットをクローズし、必要なドキュメント更新（タスクチェックリストの反映など）を行う。
+* **Tier1**: **orchestrator** — *step2 以降すべての行動の起点*。`state` を操作し、tier2 に直接指示。
+* **Tier2**: **planner / coder / judge** — orchestrator から直接指示を受ける中核。
+* **Tier3**: **tester / researcher** — それぞれ **coder / planner** を補助。
 
-## 3. 記録ルール
-- `docs/results`: チケット単位のアウトプット。図・表・指標サマリ・考察などを Markdown/PNG/CSV で保存し、冒頭にチケットIDと担当者、実行日を記載する。
-- `docs/trace`: 実行ログ、設定値、学習パラメータ、変更ファイル一覧など追跡情報を残す。再現性確保のためコマンド履歴や Git ハッシュも記録する。
-- `docs/judges`: judge 判定の公式ログ。各レビューは `docs/judges/<ticket-id>.md` に保存し、判定日、承認/差戻しステータス、主要指摘、フォローアップ要求を記載する。
-- チケット更新時は planner が `docs/spec/implementation-tasks.md` のチェックボックスを最新状態に反映し、進捗可視化を行う。
+## 1. 役割と責務（Minimal）
 
-## 4. コミュニケーション
-- 仕様の不確実性や課題が発生した場合は即時 planner にエスカレーション。
-- reviewer（judge）からの指摘は、対応担当者（coder/tester）が新チケットまたは既存チケットの再オープンとして処理する。
-- 定期的に planner が進捗レビューを行い、必要に応じて優先度・担当の再割り当てを行う。
+* **orchestrator（T1）**：
+
+  * `state` を操作（No Status→Backlog→Ready→In Progress→In Review→Done）
+  * tier2（planner / coder / judge）へ直接ディスパッチ
+  * `reports` を見てルーティング（judgeへ送る or plannerへ戻す）
+* **planner（T2）**：
+
+  * `requirements.md` の保守（SSOT）／**tickets（作業単位）を発行**
+  * 必要に応じて **researcher（T3）** を呼び出し、外部情報でハルシネーションを防止
+* **coder（T2）**：
+
+  * 実装・実験。`trace`（変更ログ）を記録、成果を `reports` に集約
+* **tester（T3）**：
+
+  * **coder が実装したテストを実行**し、**要約した結果を coder に返す**（ノイズ低減）
+  * 合わせて `reports` に検証要約を残す
+* **judge（T2）**：
+
+  * `reports` と `trace` を基に最終判定（承認・差戻し）
+* **researcher（T3）**：
+
+  * planner の補助として、外部情報（WEB など）を調査・要約し、意思決定を支援
+  * judge の指摘や coder の停滞を踏まえ、planner 要請で出動
+
+## 2. 共有リソース（Containers）
+
+* **tickets**：作業単位。**planner が発行**。
+* **state**：進捗管理（No Status / Backlog / Ready / In Progress / In Review / Done）。**orchestrator が操作**。
+* **trace**：変更ログ（日時・コマンド・git hash・設定差分・実行環境）。**judge が妥当性判断に使用**。
+* **reports**（※`results` をリネーム）：
+
+  * 「**何ができたか／できなかったか**」を明確化する要約置き場（表・図・短評）。
+  * **orchestrator は reports を見て**「judge に回す／planner に戻す」を判断する。
+
+---
+
+## 3. ワークフロー（Mermaid・最小）
+
+```mermaid
+flowchart TD
+  %% Tiers
+  subgraph T1[Tier1]
+    ORC[orchestrator\n(起点 / state操作 / 直接指示)]
+  end
+  subgraph T2[Tier2]
+    PLN[planner\n(SSOT保守 / tickets発行)]
+    COD[coder\n(実装/実験)]
+    JDG[judge\n(最終判定)]
+  end
+  subgraph T3[Tier3]
+    TST[tester\n(テスト実行/要約返却)]
+    RSC[researcher\n(外部情報/ハルシ防止)]
+  end
+
+  %% Containers
+  TCK[(tickets)]
+  ST[(state)]
+  TR[(trace)]
+  RPT[(reports)]
+
+  %% Step1: planner が tickets を用意（SSOTに基づく）
+  PLN --> TCK
+
+  %% Step2 以降の起点は orchestrator
+  ORC --- ST
+  ORC -->|assign| PLN
+  ORC -->|assign| COD
+  ORC -->|assign| JDG
+
+  %% planner は必要に応じ researcher を起動
+  PLN -->|必要に応じ| RSC
+  RSC --> PLN
+
+  %% coder 実装 -> tester 実行/要約 -> coder へ返却
+  COD --> TST
+  TST -->|要約| COD
+
+  %% 生成物/記録
+  COD --> TR
+  COD --> RPT
+  TST --> RPT
+
+  %% orchestrator が reports を見て判断
+  RPT --> ORC
+  ORC -->|達成見込みあり/要審査| JDG
+  ORC -->|未達/要要件見直し| PLN
+
+  %% judge 判定
+  JDG -->|承認| ORC
+  JDG -->|差戻し| PLN
+```
+
+---
+
+## 4. チケット状態遷移（state）— 操作者: orchestrator
+
+```mermaid
+stateDiagram-v2
+  [*] --> NoStatus
+  NoStatus --> Backlog
+  Backlog --> Ready
+  Ready --> InProgress
+  InProgress --> InReview
+  InReview --> Done
+
+  %% ループ/差戻し
+  InReview --> InProgress : 修正依頼（judge or tester経由）
+  InProgress --> Ready : 仕様見直し（planner経由）
+```
+
+* **操作原則（最小）**
+
+  * `Backlog→Ready`：依存解消＆着手可能になったら
+  * `Ready→In Progress`：担当割当済み
+  * `In Progress→In Review`：`reports/trace` が揃ったら
+  * `In Review→Done`：judge 承認
+
+---
+
+## 5. ハンドオフ契約（I/O Contract, Minimal）
+
+| Role         | 受け取る                    | 返す                               | 主な完了条件         |
+| ------------ | ----------------------- | -------------------------------- | -------------- |
+| orchestrator | tickets, reports        | 指示（tier2へ）, state更新              | 正しいルーティング・状態遷移 |
+| planner      | SSOT, judge/ORCのフィードバック | tickets更新, SSOT更新                | 受入基準の明確化/再定義   |
+| coder        | tickets, configs        | 実装成果→**reports**, 記録→**trace**   | tester のスモークOK |
+| tester       | 実装/テスト群                 | **要約レポート**（reports へ, coder に短報） | 受入基準の妥当な評価     |
+| judge        | reports, trace          | 承認/差戻し                           | 要件適合の最終判断      |
+| researcher   | plannerの問い              | 調査要約（外部根拠付き）                     | 判断材料が増えること     |
+
+---
+
+### 運用メモ（最小）
+
+* **SSOTは `requirements.md`**。変更は必ずチケット経由で反映。
+* **reports を中心に意思決定**：できた/できないを即時に可視化し、ORC が「judge 行き or planner 戻し」を決める。
+* **tester の“要約”で coder の認知負荷を下げる**（生ログは trace、意思決定は reports）。
+* **researcher は“必要なときだけ”planner が呼ぶ**（外部根拠の注入でハルシ対策）。
+
+必要なら、このドラフトをあなたの実プロジェクトの **具体的なチケット名・状態定義の微調整**に合わせて最適化版も作れます。
